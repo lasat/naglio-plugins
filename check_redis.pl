@@ -2249,7 +2249,8 @@ sub main_checkvars {
 
 		# if we were asked to output performance, prepare it but do not output until later
 		if ((defined($self->{'o_perf'}) && defined($avar) && !exists($thresholds->{$avar}{'PERF'})) ||
-		    (exists($thresholds->{$avar}{'PERF'}) && $thresholds->{$avar}{'PERF'} eq 'YES')) {
+		    (exists($thresholds->{$avar}{'PERF'}) && $thresholds->{$avar}{'PERF'} eq 'YES') && 
+                        $dataresults->{$dvar}[0] !~ /\s/ && $dataresults->{$dvar}[0] =~ /^\d+.*/ && $dataresults->{$dvar}[0] !~ /\d\D\d/) {
 			$perf_str = perf_name($aname).'='.$dataresults->{$dvar}[0];
 			$self->set_perfdata($dvar, $perf_str, undef, "IFNOTSET"); # with undef UOM would get added
 			$dataresults->{$dvar}[2]=0; # this would clear -1 from preset perf data, making it ready for output
@@ -2297,10 +2298,10 @@ sub main_perfvars {
 	}
 	else {
 	    foreach $dvar (@{$datavars->{$avar}}) {
-	    	if (defined($dataresults->{$dvar}[0])) {
+	    	if (defined($dataresults->{$dvar}[0]) && $dataresults->{$dvar}[0] !~ /\s/ && $dataresults->{$dvar}[0] =~ /^\d+.*/ && $dataresults->{$dvar}[0] !~ /\d\D\d/) {
 		    $self->verb("Perfvar: $dvar ($avar) = ".$dataresults->{$dvar}[0]);
 	            if (!defined($known_vars->{$avar}[1]) || $known_vars->{$avar}[1] =~ /$PERF_OK_STATUS_REGEX/ ) {
-			$self->addto_perfdata_output($dvar);
+		        $self->addto_perfdata_output($dvar);
 		    }
 		    else {
 			$self->verb(" -- not adding to perfdata because of it is '".$known_vars->{$avar}[1]."' type variable --");

@@ -93,24 +93,24 @@ $VAR = array(	'total_connections_received' => -1,	# Connections Graph: connectio
 foreach ($this->DS as $KEY=>$VAL) {
 	if (isset($VAR[$VAL['LABEL']])) {
 		$VAR[$VAL['LABEL']] = $VAL['DS'];
+		$VARRRD[$VAL['LABEL']] = $VAL['RRDFILE'];
 	}
-}
+} 
 
 $gindex=0;
 
-if ($VAR['response_time'] != -1) {
-  $vindex=$VAR['response_time'];
-  $unit=$UNIT[$vindex];
+if ($VAR['response_time'] != -1) {  
+  $unit=$UNIT[$VAR['response_time']];
   $ds_name[$gindex] = "Redis Response Time";
-  $opt[$gindex] = "--vertical-label \"$unit\" --title \"$servicedesc Response Time on $hostname \" --slope-mode --color=BACK#000000 --color=FONT#F7F7F7 --color=SHADEA#ffffff --color=SHADEB#ffffff --color=CANVAS#000000 --color=GRID#00991A --color=MGRID#00991A --color=ARROW#FF0000 ";
-  $def[$gindex] =  rrd::def("var1", $RRDFILE[$vindex], $DS[$vindex], "AVERAGE");
+  $opt[$gindex] = "--vertical-label \"$unit\" --title \"$servicedesc Response Time on $hostname \" --slope-mode --color=SHADEA#ffffff --color=SHADEB#ffffff --color=ARROW#FF0000 ";
+  $def[$gindex] =  rrd::def("var1", $VARRRD['response_time'], $DS[$VAR['response_time']], "AVERAGE");
   $def[$gindex] .= "VDEF:slope=var1,LSLSLOPE " ;
   $def[$gindex] .= "VDEF:int=var1,LSLINT " ;
   $def[$gindex] .= "CDEF:proj=var1,POP,slope,COUNT,*,int,+ " ;
   $def[$gindex] .= "LINE2:proj#ff00ff:\"Projection \" " ;
-  $def[$gindex] .= "GPRINT:var1:LAST:\"%6.2lf$unit last\" " ;
-  $def[$gindex] .= "GPRINT:var1:AVERAGE:\"%6.2lf$unit avg\" " ;
-  $def[$gindex] .= "GPRINT:var1:MAX:\"%6.2lf$unit max\\n\" ";
+  $def[$gindex] .= "GPRINT:var1:LAST:\"%6.2lf$unit Last\" " ;
+  $def[$gindex] .= "GPRINT:var1:MAX:\"%6.2lf$unit Max\" ";
+  $def[$gindex] .= "GPRINT:var1:AVERAGE:\"%6.2lf$unit Avg\\n\" " ;
   $def[$gindex] .= "CDEF:sp1=var1,100,/,10,* " ;
   $def[$gindex] .= "CDEF:sp2=var1,100,/,20,* " ;
   $def[$gindex] .= "CDEF:sp3=var1,100,/,30,* " ;
@@ -143,30 +143,30 @@ if ($VAR['total_connections_received'] != -1 ||
   $opt[$gindex] = "--lower-limit=0 --vertical-label \"connections\" --title \"$servicedesc Connections to $hostname\" ";
   $def[$gindex] = "";
   if ($vindex_connectedclients!=-1) {
-	$def[$gindex] .= rrd::def("curr_conn", $RRDFILE[$vindex_connectedclients], $DS[$vindex_connectedclients], "AVERAGE");
+	$def[$gindex] .= rrd::def("curr_conn", $VARRRD['total_connections_received'], $DS[$vindex_connectedclients], "AVERAGE");
 	$def[$gindex] .= rrd::area("curr_conn", "#00FF00", "Current Number of Connections");
 	$def[$gindex] .= rrd::gprint("curr_conn", array("LAST", "MAX", "AVERAGE"), "%3.0lf ");
   }
   if ($vindex_totalconnections!=-1) {
-	$def[$gindex] .= rrd::def("conn_rate", $RRDFILE[$vindex_totalconnections], $DS[$vindex_totalconnections], "AVERAGE");
+	$def[$gindex] .= rrd::def("conn_rate", $VARRRD['connected_clients'], $DS[$vindex_totalconnections], "AVERAGE");
 	$def[$gindex] .= rrd::line1("conn_rate", "#0000FF", "New Connnections Per Second  ");
 	$def[$gindex] .= rrd::gprint("conn_rate", array("LAST", "MAX", "AVERAGE"), "%3.0lf ");
   }
   if ($vindex_blockedclients!=-1) {
-	$def[$gindex] .= rrd::def("blocked_clients", $RRDFILE[$vindex_blockedclients], $DS[$vindex_blockedclients], "AVERAGE");
+	$def[$gindex] .= rrd::def("blocked_clients", $VARRRD['blocked_clients'], $DS[$vindex_blockedclients], "AVERAGE");
 	$def[$gindex] .= rrd::line1("blocked_clients", "#FF0000", "Blocked Client Connections   ");
 	$def[$gindex] .= rrd::gprint("blocked_clients", array("LAST","MAX","AVERAGE"), "%3.0lf ");
   }
   $gindex++;
 }
 
-if ($VAR['keyspace_hits'] != -1 && $VAR['keyspace_misses'] != -1) {
+if ($VAR['keyspace_hits'] != -1 && $VAR['keyspace_misses'] != -1) { 
   $vindex_hits=$VAR['keyspace_hits'];
   $vindex_misses=$VAR['keyspace_misses'];
   $ds_name[$gindex] = "Redis Hits and Misses";
   $opt[$gindex] = "--lower-limit=0 --vertical-label \"hits and misses\" --title \"$servicedesc Hits and Misses on $hostname\" ";
-  $def[$gindex] = rrd::def("get_hits", $RRDFILE[$vindex_hits], $DS[$vindex_hits], "AVERAGE");
-  $def[$gindex] .= rrd::def("get_misses", $RRDFILE[$vindex_misses], $DS[$vindex_misses], "AVERAGE");
+  $def[$gindex] = rrd::def("get_hits", $VARRRD['keyspace_hits'], $DS[$vindex_hits], "AVERAGE");
+  $def[$gindex] .= rrd::def("get_misses", $VARRRD['keyspace_misses'], $DS[$vindex_misses], "AVERAGE");
   $def[$gindex] .= rrd::area("get_hits", "#00FF00", "Hits     ");
   $def[$gindex] .= rrd::gprint("get_hits", array("LAST", "MAX", "AVERAGE"), "%3.0lf ");
   $def[$gindex] .= rrd::area("get_misses", "#FF0000", "Misses   ", "STACK");
@@ -184,19 +184,19 @@ if ($VAR['total_keys'] != -1 && $VAR['total_expires'] != -1) {
   $vindex_totalexpires=$VAR['total_expires'];
   $ds_name[$gindex] = "Redis Keys Store";
   $opt[$gindex] = "--lower-limit=0 --vertical-label \"keys\" --title \"$servicedesc Keys on $hostname\" ";
-  $def[$gindex] = rrd::def("total_keys", $RRDFILE[$vindex_totalkeys], $DS[$vindex_totalkeys], "AVERAGE");
-  $def[$gindex] .= rrd::def("total_expires", $RRDFILE[$vindex_totalexpires], $DS[$vindex_totalexpires], "AVERAGE");
+  $def[$gindex] = rrd::def("total_keys", $VARRRD['total_keys'], $DS[$vindex_totalkeys], "AVERAGE");
+  $def[$gindex] .= rrd::def("total_expires", $VARRRD['total_expires'], $DS[$vindex_totalexpires], "AVERAGE");
   $def[$gindex] .= rrd::area("total_keys", "#6495ED", "Total Keys ");
   $def[$gindex] .= rrd::gprint("total_keys", array("LAST", "MAX", "AVERAGE"), "%3.0lf ");
   $def[$gindex] .= rrd::area("total_expires", "#00FFFF", "Will Expire", "");
   $def[$gindex] .= rrd::gprint("total_expires", array("LAST", "MAX", "AVERAGE"), "%3.0lf ");
   if ($vindex_expiredkeys!=-1) {
-	$def[$gindex] .= rrd::def("expired_keys", $RRDFILE[$vindex_expiredkeys], $DS[$vindex_expiredkeys], "AVERAGE");
+	$def[$gindex] .= rrd::def("expired_keys", $VARRRD['expired_keys'], $DS[$vindex_expiredkeys], "AVERAGE");
 	$def[$gindex] .= rrd::line1("expired_keys", "#00FF00", "Expired   ", "");
 	$def[$gindex] .= rrd::gprint("expired_keys", array("LAST", "MAX", "AVERAGE"), "%3.0lf ");
   }
   if ($vindex_evictedkeys!=-1) {
-        $def[$gindex] .= rrd::def("evicted_keys", $RRDFILE[$vindex_evictedkeys], $DS[$vindex_evictedkeys], "AVERAGE");
+        $def[$gindex] .= rrd::def("evicted_keys", $VARRRD['evicted_keys'], $DS[$vindex_evictedkeys], "AVERAGE");
         $def[$gindex] .= rrd::line1("evicted_keys", "#FF0000", "Evicted   ", "");
         $def[$gindex] .= rrd::gprint("evicted_keys", array("LAST", "MAX", "AVERAGE"), "%3.0lf ");
   }
@@ -211,8 +211,8 @@ if ($VAR['used_memory'] != -1 && $VAR['used_memory_peak']) {
   $vindex_utilization=$VAR['memory_utilization'];
   $ds_name[$gindex] = "Redis Memory";
   $opt[$gindex]  = "--lower-limit=0 --vertical-label \"MB\" --title \"$servicedesc Memory Use on $hostname\" ";
-  $def[$gindex]  = rrd::def("bytes", $RRDFILE[$vindex_usedmemory], $DS[$vindex_usedmemory], "AVERAGE");
-  $def[$gindex] .= rrd::def("maxbytes", $RRDFILE[$vindex_memorypeak], $DS[$vindex_memorypeak], "AVERAGE");
+  $def[$gindex]  = rrd::def("bytes", $VARRRD['used_memory'], $DS[$vindex_usedmemory], "AVERAGE");
+  $def[$gindex] .= rrd::def("maxbytes", $VARRRD['used_memory_peak'], $DS[$vindex_memorypeak], "AVERAGE");
   $def[$gindex] .= rrd::cdef("use_mb", "bytes,1024,/,1024,/");
   $def[$gindex] .= rrd::cdef("maxuse_mb", "maxbytes,1024,/,1024,/");
   $def[$gindex] .= rrd::cdef("mfree_mb", "maxbytes,bytes,-,1024,/,1024,/");
@@ -225,12 +225,12 @@ if ($VAR['used_memory'] != -1 && $VAR['used_memory_peak']) {
   $def[$gindex] .= "GPRINT:maxuse_mb:MAX:\"%6.1lfMB Max \" " ;
   $def[$gindex] .= "GPRINT:maxuse_mb:AVERAGE:\"%6.1lfMB Avg \\n\" " ;
   if ($vindex_memoryrss!=-1) {
-        $def[$gindex] .= rrd::def("memoryrss", $RRDFILE[$vindex_memoryrss], $DS[$vindex_memoryrss], "AVERAGE");
+        $def[$gindex] .= rrd::def("memoryrss", $VARRRD['used_memory_rss'], $DS[$vindex_memoryrss], "AVERAGE");
         $def[$gindex] .= rrd::cdef("memrss_mb", "memoryrss,1024,/,1024,/");
 	$def[$gindex] .= rrd::cdef("fragmented_mb", "memrss_mb,use_mb,-");
         $def[$gindex] .= rrd::area("fragmented_mb", "#FFD700", "Allocated Memory", "STACK");
 	if ($vindex_utilization!=-1) {
-		$def[$gindex] .= rrd::def("use_perc", $RRDFILE[$vindex_utilization], $DS[$vindex_utilization], "AVERAGE");
+		$def[$gindex] .= rrd::def("use_perc", $VARRRD['memory_utilization'], $DS[$vindex_utilization], "AVERAGE");
 		$def[$gindex] .= rrd::cdef("free_perc", "100,use_perc,-");
 		$def[$gindex] .= rrd::cdef("total_mb", "memrss_mb,use_perc,/,100,*");
 		$def[$gindex] .= rrd::cdef("free_mb", "total_mb,memrss_mb,-");
@@ -243,7 +243,7 @@ if ($VAR['used_memory'] != -1 && $VAR['used_memory_peak']) {
         	$def[$gindex] .= rrd::cdef("fragmentation_calc", "memrss_mb,use_mb,/");
         	$def[$gindex] .= rrd::comment("* Fragmentation Ratio (Allocated/Used) is \g");
 		if ($vindex_fragmentation!=-1) {
-			$def[$gindex] .= rrd::def("fragmentation_data", $RRDFILE[$vindex_fragmentation], $DS[$vindex_fragmentation], "AVERAGE");
+			$def[$gindex] .= rrd::def("fragmentation_data", $VARRRD['mem_fragmentation_ratio'], $DS[$vindex_fragmentation], "AVERAGE");
 			$def[$gindex] .= "GPRINT:fragmentation_calc:LAST:\" %2.2lf \g\" ";
         		$def[$gindex] .= "GPRINT:fragmentation_data:LAST:\" (actual %2.2lf)\\n\" ";
 		}
@@ -261,7 +261,7 @@ if ($VAR['used_memory'] != -1 && $VAR['used_memory_peak']) {
 		$def[$gindex] .= "GPRINT:total_mb:LAST:\"%6.1lfMB\\n\" ";
 	}
 	else {
-	        $def[$gindex] .= "GPRINT:memrss_mb:LAST:\"%6.1lfMB Last \" " ;
+		$def[$gindex] .= "GPRINT:memrss_mb:LAST:\"%6.1lfMB Last \" " ;
 		$def[$gindex] .= "GPRINT:memrss_mb:MAX:\"%6.1lfMB Max \" " ;
 		$def[$gindex] .= "GPRINT:memrss_mb:AVERAGE:\"%6.1lfMB Avg \\n\" " ;
 	}
@@ -269,28 +269,28 @@ if ($VAR['used_memory'] != -1 && $VAR['used_memory_peak']) {
   $gindex++;
 }
 
-if ($VAR['used_cpu_sys'] != -1) {
+if ($VAR['used_cpu_sys'] != -1) { 
   $vindex_cpumain_sys=$VAR['used_cpu_sys'];
   $vindex_cpumain_user=$VAR['used_cpu_user'];
   $vindex_cpuchild_sys=$VAR['used_cpu_sys_children'];
   $vindex_cpuchild_user=$VAR['used_cpu_user_children'];
   $ds_name[$gindex] ="CPU Use";
   $opt[$gindex]  = "--vertical-label \"cpu time in msec\" --title \"$servicedesc CPU Use on $hostname\" ";
-  $def[$gindex]  = rrd::def("cpu_main_sys", $RRDFILE[$vindex_cpumain_sys], $DS[$vindex_cpumain_sys], "AVERAGE");
+  $def[$gindex]  = rrd::def("cpu_main_sys", $VARRRD['used_cpu_sys'], $DS[$vindex_cpumain_sys], "AVERAGE");
   $def[$gindex] .= rrd::area("cpu_main_sys", "#FF6103", "System CPU - Main Thread");
   $def[$gindex] .= rrd::gprint("cpu_main_sys", array("LAST","MAX","AVERAGE"), "%6.2lf ");
   if ($vindex_cpuchild_sys!=-1) {
-    $def[$gindex] .= rrd::def("cpu_child_sys", $RRDFILE[$vindex_cpuchild_sys], $DS[$vindex_cpuchild_sys], "AVERAGE");
+    $def[$gindex] .= rrd::def("cpu_child_sys", $VARRRD['used_cpu_sys_children'], $DS[$vindex_cpuchild_sys], "AVERAGE");
     $def[$gindex] .= rrd::area("cpu_child_sys", "#FFD700", "System CPU - Children   ", "STACK");
     $def[$gindex] .= rrd::gprint("cpu_child_sys", array("LAST","MAX","AVERAGE"), "%6.2lf ");
   }
   if ($vindex_cpumain_user!=-1) {
-    $def[$gindex] .= rrd::def("cpu_main_user", $RRDFILE[$vindex_cpumain_user], $DS[$vindex_cpumain_user], "AVERAGE");
+    $def[$gindex] .= rrd::def("cpu_main_user", $VARRRD['used_cpu_user'], $DS[$vindex_cpumain_user], "AVERAGE");
     $def[$gindex] .= rrd::area("cpu_main_user", "#008000", "User CPU   - Main Thread", "STACK");
     $def[$gindex] .= rrd::gprint("cpu_main_user", array("LAST","MAX","AVERAGE"), "%6.2lf ");
   }
   if ($vindex_cpuchild_user!=-1) {
-    $def[$gindex] .= rrd::def("cpu_child_user", $RRDFILE[$vindex_cpuchild_user], $DS[$vindex_cpuchild_user], "AVERAGE");
+    $def[$gindex] .= rrd::def("cpu_child_user", $VARRRD['used_cpu_user_children'], $DS[$vindex_cpuchild_user], "AVERAGE");
     $def[$gindex] .= rrd::area("cpu_child_user", "#00FF00", "User CPU   - Children   ", "STACK");
     $def[$gindex] .= rrd::gprint("cpu_child_user", array("LAST","MAX","AVERAGE"), "%6.2lf ");
   }
@@ -298,3 +298,4 @@ if ($VAR['used_cpu_sys'] != -1) {
 }
 
 ?>
+
