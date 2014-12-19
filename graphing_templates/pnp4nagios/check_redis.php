@@ -142,19 +142,19 @@ if ($VAR['total_connections_received'] != -1 ||
   $ds_name[$gindex] = "Redis Client Connections";
   $opt[$gindex] = "--lower-limit=0 --vertical-label \"connections\" --title \"$servicedesc Connections to $hostname\" ";
   $def[$gindex] = "";
-  if ($vindex_connectedclients!=-1) {
-	$def[$gindex] .= rrd::def("curr_conn", $VARRRD['total_connections_received'], $DS[$vindex_connectedclients], "AVERAGE");
-	$def[$gindex] .= rrd::area("curr_conn", "#00FF00", "Current Number of Connections");
-	$def[$gindex] .= rrd::gprint("curr_conn", array("LAST", "MAX", "AVERAGE"), "%3.0lf ");
-  }
   if ($vindex_totalconnections!=-1) {
-	$def[$gindex] .= rrd::def("conn_rate", $VARRRD['connected_clients'], $DS[$vindex_totalconnections], "AVERAGE");
-	$def[$gindex] .= rrd::line1("conn_rate", "#0000FF", "New Connnections Per Second  ");
+	$def[$gindex] .= rrd::def("conn_rate", $VARRRD['total_connections_received'], $DS[$vindex_totalconnections], "AVERAGE");
+	$def[$gindex] .= rrd::area("conn_rate", "#00FF00",        "New Connnections      ");
 	$def[$gindex] .= rrd::gprint("conn_rate", array("LAST", "MAX", "AVERAGE"), "%3.0lf ");
+  }
+  if ($vindex_connectedclients!=-1) {
+	$def[$gindex] .= rrd::def("curr_conn", $VARRRD['connected_clients'], $DS[$vindex_connectedclients], "AVERAGE");
+	$def[$gindex] .= rrd::line1("curr_conn", "#0000FF",       "Current Connections   ");
+	$def[$gindex] .= rrd::gprint("curr_conn", array("LAST", "MAX", "AVERAGE"), "%3.0lf ");
   }
   if ($vindex_blockedclients!=-1) {
 	$def[$gindex] .= rrd::def("blocked_clients", $VARRRD['blocked_clients'], $DS[$vindex_blockedclients], "AVERAGE");
-	$def[$gindex] .= rrd::line1("blocked_clients", "#FF0000", "Blocked Client Connections   ");
+	$def[$gindex] .= rrd::line1("blocked_clients", "#FF0000", "Blocked Connections   ");
 	$def[$gindex] .= rrd::gprint("blocked_clients", array("LAST","MAX","AVERAGE"), "%3.0lf ");
   }
   $gindex++;
